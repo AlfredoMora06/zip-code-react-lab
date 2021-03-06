@@ -2,15 +2,31 @@ import React, { Component } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap-grid.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Card, Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 
 
 
-function City(props) {
+function City({ locationText, city, state, lat, long, population, totalWages }) {
   return (
-    <div>
-      This is the City component
-    </div>
+    <div className="container pb-4">
+      <div className="row justify-content-center">
+        <div className="col-5">
+          <div className="card">
+            <div className="card-header">
+              {locationText}
+            </div>
+            <div className="card-body">
+              <ul>
+                <li>State: {state}</li>
+                <li>Location: {lat}, {long} </li>
+                <li>Population (estimated): {population} </li>
+                <li>Total Wages: {totalWages}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div >
   );
 }
 
@@ -30,35 +46,40 @@ class App extends Component {
     this.state = {
       zipCode: '',
       cities: [],
-      states: [],
     }
   }
 
   zipChanged(e) {
 
-    this.setState({
-      zipCode: e.target.value
-    })
-
-    let url = "http://ctp-zip-api.herokuapp.com/zip/" + this.state.zipCode;
-    // Make GET request for the zip resource
+    let zip = e.target.value;
     // then, when you receive the result, store it in state
-    fetch(url)
-      .then((response) => response.json())
-      .then(jsonResponse => {
-        let result = jsonResponse.map(o => ({ city: o.City }));
-        let estados = jsonResponse.map(o => ({ estado: o.State }));
 
-        this.setState({
-          cities: result,
-          states: estados,
-        })
-      });
+    if (zip.length === 5) {
+      fetch("http://ctp-zip-api.herokuapp.com/zip/" + zip)
+        .then((response) => response.json())
+        .then(jsonResponse => {
+
+          this.setState({
+            cities: jsonResponse,
+          })
+        });
+
+
+      this.setState({
+        zipCode: e.target.value
+      })
+    }
+    else {
+      this.setState({
+        cities: null,
+      })
+    }
   }
 
+
+
+
   render() {
-    const cit = this.state.cities
-    const stat = this.state.states
     return (
       <div className="App">
         <div className="App-header">
@@ -71,46 +92,57 @@ class App extends Component {
             </Col>
           </Row>
         </Container>
-        <div>
-          {
-            cit.map((ciudad, st) =>
-
-              < div >
-                <Container className="py-3">
-                  <Row className="justify-content-center">
-                    <Col className="col-6">
-                      <Card>
-                        <Card.Header>
-                          <p>{ciudad['city']}, {stat[st]['estado']}</p>
-                        </Card.Header>
-                        <Card.Body>
-                          <ul>
-                            <li>Stuff Goes Here</li>
-                          </ul>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  </Row>
-                </Container>
-              </div>,
-            )
 
 
+        {
+          (this.state.cities === null ?
+            <h3 className="text-center">No Results</h3> :
+            <div>
+              {
+
+                this.state.cities.map((c, index) => {
+
+                  return <City
+                    locationText={c.LocationText}
+                    city={c.City}
+                    state={c.State}
+                    lat={c.Lat}
+                    long={c.Long}
+                    population={c.EstimatedPopulation}
+                    totalWages={c.TotalWages}
+                    key={index}
+                  />
+
+                })
 
 
-            /*
-              Instead of hardcoding the following 3 cities,
-              Create them dynamically from this.state.cities
-            */
-          }
+                /*
+                  Instead of hardcoding the following 3 cities,
+                  Create them dynamically from this.state.cities
+                */
+              }
 
 
-        </div>
+            </div>
+          )
+        }
 
 
       </div >
     );
+
   }
 }
 
 export default App;
+
+/*
+
+npm install -g npm@latest
+
+TODO:
+- Display more data about each city [X]
+- remove results when extra characters are typed
+- display "no results" if the zip is incorrect instead of empty
+- add checks to prevent multiple requests if we know zip is invalid format
+*/
