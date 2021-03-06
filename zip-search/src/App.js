@@ -62,6 +62,8 @@ class App extends Component {
           this.setState({
             cities: jsonResponse,
           })
+        }).catch(err => {
+          console.error('Error:', err);
         });
 
 
